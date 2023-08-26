@@ -1,3 +1,2 @@
-
 // Peripherals base address
-pub const address: usize = 0xFE00_0000;
+pub const address: usize = 0xfe00_0000;

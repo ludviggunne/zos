@@ -1,5 +1,4 @@
 
-const std = @import("std");
 const address = @import("base.zig").address + 0x0020_0000;
 const Register = @import("Register.zig");
 
@@ -23,4 +22,5 @@ pub const ResistorSelect = enum(u2) {
 pub const gpfsel1 = Register.init(address + 0x04);
 pub const gpset0 = Register.init(address + 0x1c);
 pub const gpclr0 = Register.init(address + 0x28);
+pub const pup_pdn_cntrl_reg0 = Register.init(address + 0xe4);
 pub const pup_pdn_cntrl_reg1 = Register.init(address + 0xe8);

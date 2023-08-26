@@ -1,25 +1,23 @@
 
-const gpio = @import("peripherals/gpio.zig");
+// Bring in memzero
+comptime { _ = @import("utils.zig"); }
 
-comptime {
-    asm (
-        @embedFile("boot.S")
-    );
+// Boot code
+comptime { asm (@embedFile("boot.S")); }
+
+//comptime { asm ( ".section .text" ); }
+const uart = @import("peripherals/uart.zig");
+
+fn concat(a: []const u8, b: []const u8) []const u8 {
+    const c = a ++ b;
+    return c;
 }
 
-export fn memzero64(begin: u64, end: u64) void {
-    _ = .{ begin, end, };
-}
+comptime { asm ( concat(".section ", ".test")); }
 
+// Kernel
 export fn kmain() noreturn {
-
-    gpio.gpfsel1.set_enum(18, gpio.FunctionSelect.output);
-    gpio.pup_pdn_cntrl_reg1.set_enum(0, gpio.ResistorSelect.none);
-
-    while (true) {
-        gpio.gpset0.set(16, 1, 1);
-        for (0..2_500_000) |_| { asm volatile ( "nop" ); }
-        gpio.gpclr0.set(16, 1, 1);
-        for (0..2_500_000) |_| { asm volatile ( "nop" ); }
-    }
+    uart.init();
+    uart.writeString("Hello, world!");
+    while (true) {}
 }

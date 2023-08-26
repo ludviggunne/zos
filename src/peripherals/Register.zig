@@ -11,6 +11,14 @@ pub fn init(addr: u64) Self {
     };
 }
 
+pub fn write(self: Self, value: u32) void {
+    self.mem.* = value;
+}
+
+pub fn read(self: Self) u32 {
+    return self.mem.*;
+}
+
 pub fn set(self: Self, offset: u5, width: u5, value: u32) void {
     var mask = (@as(u32, 1) << (width)) - 1;
     mask <<= offset;
