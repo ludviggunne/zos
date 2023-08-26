@@ -1,3 +1,4 @@
+const std = @import("std");
 const aux = @import("aux.zig");
 const gpio = @import("gpio.zig");
 
@@ -22,13 +23,20 @@ pub fn init() void {
     aux.mu_cntl_reg.set(0, 2, 3); // enable transmit and receive
 }
 
-pub fn write(char: u8) void {
-    while (aux.mu_lsr_reg.read() & 0x20 == 0) {}
-    aux.mu_io_reg.write(char);
+const Context = struct {};
+const Error = error {};
+
+pub fn write(context: Context, bytes: []const u8) Error!usize {
+
+    _ = context;
+
+    for (bytes) |b| {
+        while (aux.mu_lsr_reg.read() & 0x20 == 0) {}
+        aux.mu_io_reg.write(b);
+    }
+
+    return bytes.len;
 }
 
-pub fn writeString(str: []const u8) void {
-    for (str) |c| {
-        write(c);
-    }
-}
+pub const Writer = std.io.Writer(Context, Error, write);
+pub var writer: Writer = .{ .context = .{} };

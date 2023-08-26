@@ -45,7 +45,7 @@ pub fn build(b: *std.Build) void {
     const objdump = b.addSystemCommand(&[_][]const u8 {
         "aarch64-linux-gnu-objdump",
         b.getInstallPath(.{ .custom = "bin", }, elf.out_filename),
-        "-tS",
+        "-td",
     });
     objdump.step.dependOn(&install_elf.step);
     b.step("objdump", "").dependOn(&objdump.step);

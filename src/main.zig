@@ -1,6 +1,8 @@
 
-// Bring in memzero
-comptime { _ = @import("utils.zig"); }
+comptime { 
+    _ = @import("utils.zig"); 
+    _ = @import("exceptions.zig");
+}
 
 // Boot code
 comptime { asm (@embedFile("boot.S")); }
@@ -13,11 +15,13 @@ fn concat(a: []const u8, b: []const u8) []const u8 {
     return c;
 }
 
-comptime { asm ( concat(".section ", ".test")); }
+comptime { asm ( ".section .text" ); }
 
 // Kernel
 export fn kmain() noreturn {
     uart.init();
-    uart.writeString("Hello, world!");
+    uart.writer.print("The number is {d}, and the name is {s}\n", .{ 25, "Ludvig" })
+        catch unreachable;
+    asm volatile ( "svc 0x0" );
     while (true) {}
 }

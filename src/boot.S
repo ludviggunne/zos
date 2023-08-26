@@ -30,6 +30,8 @@ el1_entry:
     // Setup stack
     ldr     x0, =__kernel_begin
     mov     sp, x0
+    // Setup exception vector table
+    bl      evtable_init
     // Zero uninitialized data
     ldr     x0, =__bss_begin
     ldr     x1, =__bss_end
