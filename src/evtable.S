@@ -1,25 +1,16 @@
 
-/*
-    Exception Vector Table (EL1)
-*/
-
-#include "exception.h"
-
 .globl evtable_init
 .globl evtable
+.section .text
 
+// Every entry simply passes the exception type
+// as a number to a generic handler
 .macro  evtentry   label
-b       \label
-.balign 0x80
-.endm
-
-.macro unimplemented_handler type
-excep_begin
-ldr     x0, =\type
-mrs     x1, elr_el1
-mrs     x2, esr_el1
-bl      unimplHandlerErr
-excep_end
+    excep_begin
+    mov     x0, #\@
+    bl      handleException
+    excep_end
+    .balign 0x80
 .endm
 
 // Call when entering exception handler
@@ -48,7 +39,6 @@ excep_end
     str   x30, [sp, #-16]!
 .endm
 
-
 // Call when exiting exception handler
 .macro excep_end
     // Pop registers x0-x30 from stack
@@ -74,7 +64,6 @@ excep_end
     eret
 .endm
 
-
 evtable_init:
     adr       x0, evtable
     msr       vbar_el1, x0
@@ -82,71 +71,19 @@ evtable_init:
 
 .align 11        // 11 ls bits of vbar_el1 are reserved
 evtable:
-    evtentry     Sync_Handler_E1t
-    evtentry     IRQ_Handler_E1t
-    evtentry     FIQ_Handler_E1t
-    evtentry     SError_Handler_E1t
-
-    evtentry     Sync_Handler_E1h
-    evtentry     IRQ_Handler_E1h
-    evtentry     FIQ_Handler_E1h
-    evtentry     SError_Handler_E1h
-
-    evtentry     Sync_Handler_E0_64
-    evtentry     IRQ_Handler_E0_64
-    evtentry     FIQ_Handler_E0_64
-    evtentry     SError_Handler_E0_64
-
-    evtentry     Sync_Handler_E0_32
-    evtentry     IRQ_Handler_E0_32
-    evtentry     FIQ_Handler_E0_32
-    evtentry     SError_Handler_E0_32
-
-
-Sync_Handler_E1t:
-    unimplemented_handler 0
-
-IRQ_Handler_E1t:
-    unimplemented_handler 1
-
-FIQ_Handler_E1t:
-    unimplemented_handler 2
-
-SError_Handler_E1t:
-    unimplemented_handler 3
-
-Sync_Handler_E1h:
-    unimplemented_handler 4
-
-IRQ_Handler_E1h:
-    unimplemented_handler 5
-
-FIQ_Handler_E1h:
-    unimplemented_handler 6
-
-SError_Handler_E1h:
-    unimplemented_handler 7
-
-Sync_Handler_E0_64:
-    unimplemented_handler 8
-
-IRQ_Handler_E0_64:
-    unimplemented_handler 9
-
-FIQ_Handler_E0_64:
-    unimplemented_handler 10
-
-SError_Handler_E0_64:
-    unimplemented_handler 11
-
-Sync_Handler_E0_32:
-    unimplemented_handler 12
-
-IRQ_Handler_E0_32:
-    unimplemented_handler 13
-
-FIQ_Handler_E0_32:
-    unimplemented_handler 14
-
-SError_Handler_E0_32:
-    unimplemented_handler 15
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
+    evtentry
