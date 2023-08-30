@@ -15,7 +15,6 @@ comptime { asm ( ".section .text" ); }
 // Kernel
 export fn kmain() noreturn {
     uart.init();
-    uart.writer.print("Get ready...\n", .{}) catch unreachable;
     asm volatile ( "svc 0x0" );
     while (true) {}
 }

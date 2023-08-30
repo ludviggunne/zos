@@ -1,5 +1,5 @@
 const std = @import("std");
-
+const builtin = @import("builtin");
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
@@ -45,7 +45,7 @@ pub fn build(b: *std.Build) void {
     const objdump = b.addSystemCommand(&[_][]const u8 {
         "aarch64-linux-gnu-objdump",
         b.getInstallPath(.{ .custom = "bin", }, elf.out_filename),
-        "-td",
+        "-tdS",
     });
     objdump.step.dependOn(&install_elf.step);
     b.step("objdump", "").dependOn(&objdump.step);

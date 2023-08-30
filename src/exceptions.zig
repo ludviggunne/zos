@@ -5,6 +5,7 @@ comptime {
 
 const uart = @import("peripherals/uart.zig");
 const aarch64 = @import("aarch64.zig");
+const std = @import("std");
 
 pub const ExceptionType = enum (u64) {
     sync_e1t,
@@ -28,16 +29,19 @@ pub const ExceptionType = enum (u64) {
     serror_e0_32,
 };
 
-pub export fn handleException(excep_type: ExceptionType) void {
-    var elr = aarch64.loadSysReg(.elr_el1);
-    var esr = aarch64.loadSysReg(.esr_el1);
+pub export fn handleException(excep_type: u64) void {
+    const elr: u64 = aarch64.loadSysReg(.elr_el1);
+    const esr: u64 = aarch64.loadSysReg(.esr_el1);
     uart.writer.print(
         \\Exception triggered:
         \\    Type: {s}
         \\    ELR:  {x}
         \\    ESR:  {x}
         , .{
-            @tagName(excep_type), 
+            @tagName(@as(
+                ExceptionType,
+                @enumFromInt(excep_type)
+            )),
             elr, 
             esr,
         }
