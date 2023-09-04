@@ -3,14 +3,11 @@
 .globl evtable
 .section .text
 
-// Every entry simply passes the exception type
-// as a number to a generic handler
-.macro  evtentry   label
+.macro  ehandlerm type
     excep_begin
-    mov     x0, #\@
+    mov     x0, #\type
     bl      handleException
     excep_end
-    .balign 0x80
 .endm
 
 // Call when entering exception handler
@@ -69,21 +66,86 @@ evtable_init:
     msr       vbar_el1, x0
     ret
 
-.align 11        // 11 ls bits of vbar_el1 are reserved
+.p2align 11        // 11 ls bits of vbar_el1 are reserved
 evtable:
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
-    evtentry
+    b           ehandler0
+    .balign    0x80
+    b           ehandler1
+    .balign    0x80
+    b           ehandler2
+    .balign    0x80
+    b           ehandler3
+    .balign    0x80
+    b           ehandler4
+    .balign    0x80
+    b           ehandler5
+    .balign    0x80
+    b           ehandler6
+    .balign    0x80
+    b           ehandler7
+    .balign    0x80
+    b           ehandler8
+    .balign    0x80
+    b           ehandler9
+    .balign    0x80
+    b           ehandler10
+    .balign    0x80
+    b           ehandler11
+    .balign    0x80
+    b           ehandler12
+    .balign    0x80
+    b           ehandler13
+    .balign    0x80
+    b           ehandler14
+    .balign    0x80
+    b           ehandler15
+    .balign    0x80
+
+ehandler0:
+    ehandlerm 0
+
+ehandler1:
+    ehandlerm 1
+
+ehandler2:
+    ehandlerm 2
+
+ehandler3:
+    ehandlerm 3
+
+ehandler4:
+    ehandlerm 4
+
+ehandler5:
+    ehandlerm 5
+
+ehandler6:
+    ehandlerm 6
+
+ehandler7:
+    ehandlerm 7
+
+ehandler8:
+    ehandlerm 8
+
+ehandler9:
+    ehandlerm 9
+
+ehandler10:
+    ehandlerm 10
+
+ehandler11:
+    ehandlerm 11
+
+ehandler12:
+    ehandlerm 12
+
+ehandler13:
+    ehandlerm 13
+
+ehandler14:
+    ehandlerm 14
+
+ehandler15:
+    ehandlerm 15
+
