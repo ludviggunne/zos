@@ -8,6 +8,6 @@ pub const SysReg = enum {
 pub fn loadSysReg(comptime reg: SysReg) u64 {
     return asm volatile (
         "mrs x0, " ++ @tagName(reg)
-        : [ret] "=x0" (->u64)
+        : [ret] "={x0}" (->u64)
     );
 } 
