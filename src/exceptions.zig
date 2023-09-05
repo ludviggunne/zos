@@ -37,6 +37,7 @@ pub export fn handleException(excep_type: u64) void {
         \\    Type: {s}
         \\    ELR:  {x}
         \\    ESR:  {x}
+        \\
         , .{
             @tagName(@as(
                 ExceptionType,
