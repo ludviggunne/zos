@@ -1,6 +1,5 @@
 
 .globl evtable_init
-.globl evtable
 .section .text
 
 .macro  ehandlerm type
