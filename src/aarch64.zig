@@ -13,3 +13,10 @@ pub fn loadSysReg(comptime reg: SysReg) u64 {
         : [ret] "={x0}" (->u64)
     );
 } 
+
+pub fn storeSysReg(comptime reg: SysReg, value: u64) void {
+    _ = asm volatile (
+        "msr " ++ @tagName(reg) ++ ", x0"
+        :: [value] "{x0}" (value)
+    );
+}
