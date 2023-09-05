@@ -3,6 +3,8 @@ pub const SysReg = enum {
     daif,
     elr_el1,
     esr_el1,
+    vbar_el1,
+    CurrentEL,
 };
 
 pub fn loadSysReg(comptime reg: SysReg) u64 {
