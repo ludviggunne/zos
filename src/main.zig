@@ -7,7 +7,6 @@ comptime {
 // Boot code
 comptime { asm (@embedFile("boot.S")); }
 
-//comptime { asm ( ".section .text" ); }
 const uart = @import("peripherals/uart.zig");
 
 comptime { asm ( ".section .text" ); }
