@@ -13,7 +13,7 @@ _start:
     mrs     x0, mpidr_el1
     and     x0, x0, #0xFF
     cmp     x0, #0x00
-    beq     el1_entry
+    beq     main_core
     b       spin_core
 main_core:
     // Transition from EL2 to EL1
