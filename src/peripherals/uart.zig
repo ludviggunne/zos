@@ -2,6 +2,7 @@ const std = @import("std");
 const aux = @import("aux.zig");
 const gpio = @import("gpio.zig");
 
+pub const erase_seq = &[_]u8 { 0x1B, 0x5B, 0x32, 0x4A, }; // VT102
 pub const baudrate: usize = 115200;
 const baud_reg_value: u32 = @import("../clock.zig").freq / (baudrate * 8) - 1;
 
@@ -15,7 +16,7 @@ pub fn init() void {
     gpio.pup_pdn_cntrl_reg0.set_enum(30, gpio.ResistorSelect.none);
 
     aux.enables.write(1); // enable mini UART
-    aux.mu_cntl_reg.write(0); // disable transmit & receive, and auto flow control
+    aux.mu_cntl_reg.write(0); // disable transmit & receive and auto flow control
     aux.mu_ier_reg.write(0); // disable interrupts
     aux.mu_mcr_reg.write(2); // set RTS line high
     aux.mu_baud_reg.write(baud_reg_value); // set baudrate
@@ -40,3 +41,7 @@ pub fn write(context: Context, bytes: []const u8) Error!usize {
 
 pub const Writer = std.io.Writer(Context, Error, write);
 pub var writer: Writer = .{ .context = .{} };
+
+pub fn clear() void {
+    writer.print(erase_seq, .{}) catch unreachable;
+}
