@@ -14,17 +14,14 @@ pub const ExceptionType = enum (u64) {
     irq_e1t,
     fiq_e1t,
     serror_e1t,
-
     sync_e1h,
     irq_e1h,
     fiq_e1h,
     serror_e1h,
-
     sync_e0_64,
     irq_e0_64,
     fiq_e0_64,
     serror_e0_64,
-
     sync_e0_32,
     irq_e0_32,
     fiq_e0_32,
