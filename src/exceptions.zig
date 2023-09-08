@@ -3,6 +3,8 @@ comptime {
     asm (@embedFile("evtable.S"));
 }
 
+comptime { asm (".section .text"); }
+
 const uart = @import("peripherals/uart.zig");
 const aarch64 = @import("aarch64.zig");
 const std = @import("std");
