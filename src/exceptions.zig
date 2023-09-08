@@ -30,21 +30,29 @@ pub const ExceptionType = enum (u64) {
 };
 
 pub export fn handleException(excep_type: u64) void {
-    const elr: u64 = aarch64.loadSysReg(.elr_el1);
-    const esr: u64 = aarch64.loadSysReg(.esr_el1);
-    uart.writer.print(
-        \\Exception triggered:
-        \\    Type: {s}
-        \\    ELR:  {x}
-        \\    ESR:  {x}
-        \\
-        , .{
-            @tagName(@as(
-                ExceptionType,
-                @enumFromInt(excep_type)
-            )),
-            elr, 
-            esr,
+    const excep: ExceptionType = @enumFromInt(excep_type);
+    switch (excep) {
+        .irq_e1h => @import("main.zig").timerHandler(
+                @import("peripherals/timer.zig").getStatus()
+            ),
+        else => {
+            const elr = aarch64.loadSysReg(.elr_el1);
+            const esr = aarch64.loadSysReg(.esr_el1);
+            uart.writer.print(
+                \\Unimplemented exception:
+                \\    Type: {s}
+                \\    ELR:  {x}
+                \\    ESR:  {x}
+                \\
+                , .{
+                    @tagName(@as(
+                        ExceptionType,
+                        @enumFromInt(excep_type)
+                    )),
+                    elr, 
+                    esr,
+                }
+            ) catch unreachable;
         }
-    ) catch unreachable;
+    }
 }
