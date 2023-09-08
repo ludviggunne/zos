@@ -38,3 +38,8 @@ pub fn set_enum(self: Self, offset: u5, value: anytype) void {
             ++ @typeName(@TypeOf(value))),
     }
 }
+
+pub fn get(self: Self, offset: u5, width: u5) u32 {
+    var mask = (@as(u32, 1) << width) - 1;
+    return mask & (self.mem.* >> offset);
+}
