@@ -1,8 +1,10 @@
 
 pub const SysReg = enum {
     daif,
+    elr_el0,
     elr_el1,
     esr_el1,
+    far_el1,
     vbar_el1,
     CurrentEL,
 };

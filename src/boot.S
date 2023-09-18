@@ -7,6 +7,8 @@
 .set el1_entry_hcr_el2, 1 << 31
 // Use EL1h and mask interrupts
 .set el1_entry_spsr_el2, (7 << 6) | (5 << 0)
+// Don't trap SVE instructions
+.set el1_entry_cpacr_el1, (3 << 20) | (3 << 16)
 
 _start:
     // Halt non primary cores
@@ -23,6 +25,10 @@ main_core:
     msr     hcr_el2, x0
     ldr     x0, =el1_entry_spsr_el2
     msr     spsr_el2, x0
+    mrs     x1, cpacr_el1
+    ldr     x0, =el1_entry_cpacr_el1
+    orr     x0, x1, x0
+    msr     cpacr_el1, x0
     adr     x0, el1_entry
     msr     elr_el2, x0
     eret
@@ -35,7 +41,7 @@ el1_entry:
     // Zero uninitialized data
     ldr     x0, =__bss_begin
     ldr     x1, =__bss_end
-    bl      memzero
+    //bl      memzero
     bl      kmain
     b       spin_core
 spin_core:

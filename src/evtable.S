@@ -2,62 +2,141 @@
 .globl evtable_init
 .section .text
 
-.macro  ehandlerm type
-    excep_begin
-    mov     x0, #\type
-    bl      handleException
-    excep_end
+// Dereference pointer, puts value in same register
+.macro deref reg
+    ldr     \reg, [\reg]
 .endm
 
-// Call when entering exception handler
-.macro excep_begin
-    // Mask interrupts
-    str   x0, [sp, #-16]!
-    mov   x0, #(0b1111 << 6)
-    msr   daif, x0
-    ldr   x0, [sp], #16
-    // Push registers x0-x30 to stack
-    stp   x0, x1, [sp, #-16]!
-    stp   x2, x3, [sp, #-16]!
-    stp   x4, x5, [sp, #-16]!
-    stp   x6, x7, [sp, #-16]!
-    stp   x8, x9, [sp, #-16]!
-    stp   x10, x11, [sp, #-16]!
-    stp   x12, x13, [sp, #-16]!
-    stp   x14, x15, [sp, #-16]!
-    stp   x16, x17, [sp, #-16]!
-    stp   x18, x19, [sp, #-16]!
-    stp   x20, x21, [sp, #-16]!
-    stp   x22, x23, [sp, #-16]!
-    stp   x24, x25, [sp, #-16]!
-    stp   x26, x27, [sp, #-16]!
-    stp   x28, x29, [sp, #-16]!
-    str   x30, [sp, #-16]!
+// Push reg to stack
+.macro push reg
+    str     \reg, [sp, #-8]!
 .endm
 
-// Call when exiting exception handler
-.macro excep_end
-    // Pop registers x0-x30 from stack
-    ldr   x30, [sp], #16
-    ldp   x28, x29, [sp], #16
-    ldp   x26, x27, [sp], #16
-    ldp   x24, x25, [sp], #16
-    ldp   x22, x23, [sp], #16
-    ldp   x20, x21, [sp], #16
-    ldp   x18, x19, [sp], #16
-    ldp   x16, x17, [sp], #16
-    ldp   x14, x15, [sp], #16
-    ldp   x12, x13, [sp], #16
-    ldp   x10, x11, [sp], #16
-    ldp   x8, x9, [sp], #16
-    ldp   x6, x7, [sp], #16
-    ldp   x4, x5, [sp], #16
-    ldp   x2, x3, [sp], #16
-    ldp   x0, x1, [sp], #16
-    // Unmask interrupts
-    msr   daif, xzr
-    // Return from exception
+// Pop reg from stack
+.macro pop reg
+    ldr     \reg, [sp], #8
+.endm
+
+// Mask interrupts
+.macro irq_mask
+    str     x0, [sp, #-8]!
+    mov     x0, #(0b1111 << 6)
+    msr     daif, x0
+    ldr     x0, [sp], #8
+.endm
+
+// Unmask interrupts
+.macro irq_unmask
+    msr     daif, xzr
+.endm
+
+// Saves general registers and stack pointer
+//  to Context struct pointed to by process.context.*
+.macro save_process_context
+
+    // Get current Process.Context struct address
+    push    x29
+    str     x29, [sp, #-8]!
+    ldr     x29, process.context
+    deref   x29
+
+    stp     x0, x1, [x29], #16
+    stp     x2, x3, [x29], #16
+    stp     x4, x5, [x29], #16
+    stp     x6, x7, [x29], #16
+    stp     x8, x9, [x29], #16
+    stp     x10, x11, [x29], #16
+    stp     x12, x13, [x29], #16
+    stp     x14, x15, [x29], #16
+    stp     x16, x17, [x29], #16
+    stp     x18, x19, [x29], #16
+    stp     x20, x21, [x29], #16
+    stp     x22, x23, [x29], #16
+    stp     x24, x25, [x29], #16
+    stp     x26, x27, [x29], #16
+    str     x28, [x30], #8
+
+    // We put pointer in x0 instead
+    //  so we can save x29 and x30
+    mov     x0, x29
+    pop     x29
+    stp     x29, x30, [x0], #16
+
+    // Save stack pointer
+    mov     x1, sp
+    str     x1, [x0]
+
+.endm
+
+// Restores general registers and stack pointer
+//  to values specified in Context struct pointed to
+//  by process.context.*
+.macro restore_process_context
+    
+    // Get current Process.Current struct address
+    ldr     x29, =process.context
+    deref   x29
+
+    // Restore stack pointer
+    ldr     x0, =stack_pointer.offset
+    deref   x0
+
+    // Add offset to struct pointer to get address of sp field
+    add     x0, x0, x29
+    deref   x0
+    mov     sp, x0
+    
+    // Restore general registers 
+    ldp     x0, x1, [x29], #16      
+    ldp     x2, x3, [x29], #16      
+    ldp     x4, x5, [x29], #16      
+    ldp     x6, x7, [x29], #16      
+    ldp     x8, x9, [x29], #16      
+    ldp     x10, x11, [x29], #16      
+    ldp     x12, x13, [x29], #16      
+    ldp     x14, x15, [x29], #16      
+    ldp     x16, x17, [x29], #16      
+    ldp     x18, x19, [x29], #16      
+    ldp     x20, x21, [x29], #16      
+    ldp     x22, x23, [x29], #16      
+    ldp     x24, x25, [x29], #16      
+    ldp     x26, x27, [x29], #16      
+    ldr     x28, [x29], #8
+    push    x0
+    mov     x0, x29
+    ldp     x29, x30, [x0]
+    pop     x0
+    
+.endm
+
+.macro save_kernel_stack_pointer
+    mov     x1, sp
+    ldr     x0, =kernel.stack_pointer
+    str     x1, [x0]
+.endm
+
+.macro restore_kernel_stack_pointer
+    ldr     x0, =kernel.stack_pointer    
+    deref   x0
+    mov     sp, x0 
+.endm
+
+.macro switch_begin
+    irq_mask
+    save_process_context
+//    restore_kernel_stack_pointer    
+.endm
+
+.macro switch_end
+//    save_kernel_stack_pointer
+    restore_process_context
+    irq_unmask
     eret
+.endm
+
+.macro unimplemented type
+    mov     x0, \type
+    b       unimplHandlerErr
 .endm
 
 evtable_init:
@@ -67,83 +146,71 @@ evtable_init:
 
 .p2align 11        // 11 ls bits of vbar_el1 are reserved
 evtable:
-    b           ehandler0
-    .balign    0x80
-    b           ehandler1
-    .balign    0x80
-    b           ehandler2
-    .balign    0x80
-    b           ehandler3
-    .balign    0x80
-    b           ehandler4
-    .balign    0x80
-    b           ehandler5
-    .balign    0x80
-    b           ehandler6
-    .balign    0x80
-    b           ehandler7
-    .balign    0x80
-    b           ehandler8
-    .balign    0x80
-    b           ehandler9
-    .balign    0x80
-    b           ehandler10
-    .balign    0x80
-    b           ehandler11
-    .balign    0x80
-    b           ehandler12
-    .balign    0x80
-    b           ehandler13
-    .balign    0x80
-    b           ehandler14
-    .balign    0x80
-    b           ehandler15
-    .balign    0x80
+    // sync_e1t
+    unimplemented 0x0
+    .balign  0x80
 
-ehandler0:
-    ehandlerm 0
+    // irq_e1t
+    unimplemented 0x1
+    .balign  0x80
 
-ehandler1:
-    ehandlerm 1
+    // fiq_e1t
+    unimplemented 0x2
+    .balign  0x80
 
-ehandler2:
-    ehandlerm 2
+    // serror_e1t
+    unimplemented 0x3
+    .balign  0x80
 
-ehandler3:
-    ehandlerm 3
+    // sync_e1h
+    unimplemented 0x4
+    .balign  0x80
 
-ehandler4:
-    ehandlerm 4
+    // irq_e1h
+    b       switch
+    .balign  0x80
 
-ehandler5:
-    ehandlerm 5
+    // fiq_e1h
+    unimplemented 0x6
+    .balign  0x80
 
-ehandler6:
-    ehandlerm 6
+    // serror_e1h
+    unimplemented 0x7
+    .balign  0x80
 
-ehandler7:
-    ehandlerm 7
+    // sync_e0_64
+    unimplemented 0x8
+    .balign  0x80
 
-ehandler8:
-    ehandlerm 8
+    // irq_e0_64
+    unimplemented 0x9
+    .balign  0x80
 
-ehandler9:
-    ehandlerm 9
+    // fiq_e0_64
+    unimplemented 0xa
+    .balign  0x80
 
-ehandler10:
-    ehandlerm 10
+    // serror_e0_64
+    unimplemented 0xb
+    .balign  0x80
 
-ehandler11:
-    ehandlerm 11
+    // sync_e0_32
+    unimplemented 0xc
+    .balign  0x80
 
-ehandler12:
-    ehandlerm 12
+    // irq_e0_32
+    unimplemented 0xd
+    .balign  0x80
 
-ehandler13:
-    ehandlerm 13
+    // fiq_e0_32
+    unimplemented 0xe
+    .balign  0x80
 
-ehandler14:
-    ehandlerm 14
+    // serror_e0_32
+    unimplemented 0xf
+    .balign  0x80
 
-ehandler15:
-    ehandlerm 15
+switch:
+    switch_begin
+    bl      handleSwitchException
+    switch_end

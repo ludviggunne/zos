@@ -1,0 +1,3 @@
+
+entry: *anyopaque,
+stack: *anyopaque,

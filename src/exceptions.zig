@@ -1,15 +1,15 @@
 
-comptime {
-    asm (@embedFile("evtable.S"));
-}
+// Exception table
+comptime { asm (@embedFile("evtable.S")); }
 
-comptime { asm (".section .text"); }
+const uart      = @import("peripherals/uart.zig");
+const utils     = @import("utils.zig");
+const aarch64   = @import("aarch64.zig");
+const std       = @import("std");
 
-const uart = @import("peripherals/uart.zig");
-const aarch64 = @import("aarch64.zig");
-const std = @import("std");
+var message: [:0] volatile u8 = @constCast("none");
 
-pub const ExceptionType = enum (u64) {
+pub const Type = enum (u64) {
     sync_e1t,
     irq_e1t,
     fiq_e1t,
@@ -28,30 +28,32 @@ pub const ExceptionType = enum (u64) {
     serror_e0_32,
 };
 
-pub export fn handleException(excep_type: u64) void {
-    const excep: ExceptionType = @enumFromInt(excep_type);
-    switch (excep) {
-        .irq_e1h => @import("main.zig").timerHandler(
-                @import("peripherals/timer.zig").getStatus()
-            ),
-        else => {
-            const elr = aarch64.loadSysReg(.elr_el1);
-            const esr = aarch64.loadSysReg(.esr_el1);
-            uart.writer.print(
-                \\Unimplemented exception:
-                \\    Type: {s}
-                \\    ELR:  {x}
-                \\    ESR:  {x}
-                \\
-                , .{
-                    @tagName(@as(
-                        ExceptionType,
-                        @enumFromInt(excep_type)
-                    )),
-                    elr, 
-                    esr,
-                }
-            ) catch unreachable;
+pub export fn unimplHandlerErr(excep_type: u64) noreturn {
+
+    const excep: Type = @enumFromInt(excep_type);
+    const elr: *anyopaque = @ptrFromInt(aarch64.loadSysReg(.elr_el1));
+    const esr = aarch64.loadSysReg(.esr_el1);
+
+    uart.writer.print(
+        \\Unimplemented exception:
+        \\    Type:            [{s}]
+        \\    Taken from:      {x}
+        \\    Syndrome:        0x{x}
+        \\    Exception class: [{b}]
+        \\    Message:         '{s}'
+        \\
+        , .{
+            @tagName(excep),
+            elr, 
+            esr,
+            (esr >> 26) & 0x3f,
+            @volatileCast(message),
         }
-    }
+    ) catch unreachable;
+
+    utils._hang();
+}
+
+pub fn setMessage(msg: []const u8) void {
+    message = @constCast(msg);        
 }
