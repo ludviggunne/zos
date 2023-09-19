@@ -1,0 +1,4 @@
+
+[submodule "chainloader/extern/serial"]
+    path = chainloader/extern/serial
+    url = https://github.com/ZigEmbeddedGroup/serial
