@@ -34,7 +34,7 @@ pub export fn unimplHandlerErr(excep_type: u64) noreturn {
     const elr: *anyopaque = @ptrFromInt(aarch64.loadSysReg(.elr_el1));
     const esr = aarch64.loadSysReg(.esr_el1);
 
-    uart.writer.print(
+    uart.print(
         \\Unimplemented exception:
         \\    Type:            [{s}]
         \\    Taken from:      {x}
@@ -49,7 +49,7 @@ pub export fn unimplHandlerErr(excep_type: u64) noreturn {
             (esr >> 26) & 0x3f,
             @volatileCast(message),
         }
-    ) catch unreachable;
+    );
 
     utils._hang();
 }

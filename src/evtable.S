@@ -139,11 +139,6 @@
     b       unimplHandlerErr
 .endm
 
-evtable_init:
-    adr       x0, evtable
-    msr       vbar_el1, x0
-    ret
-
 .p2align 11        // 11 ls bits of vbar_el1 are reserved
 evtable:
     // sync_e1t

@@ -18,20 +18,40 @@ const user1     = @import("user1/symbols.zig");
 const symbols   = @import("symbols.zig");
 const utils     = @import("utils.zig");
 const excep     = @import("exceptions.zig");
+const ldaddr    = @import("ldaddr.zig").ldaddr;
 
-// Boot code
-comptime { asm (@embedFile("boot.S")); }
+extern const __kernel_stack: ldaddr;
+extern const __bss_begin:    ldaddr;
+extern const __bss_end:      ldaddr;
 
-extern const __kernel_begin: *anyopaque;
+export fn kmain() linksection(".text.kernel.start") noreturn {
 
-export fn kmain() noreturn {
+    uart.printLn("--- Kernel entry ---", .{});
 
-    symbols.@"kernel.stack_pointer" = __kernel_begin;
+    uart.printLn("Initalizing exception vector table", .{});
+    _ = asm volatile(
+            \\ adr       x0, evtable
+            \\ msr       vbar_el1, x0
+        );
 
-    // Init IO
-    uart.init();
-    uart.clear();
-    uart.writer.print("UART initialized\n", .{}) catch unreachable;
+    uart.printLn(
+        "Clearing .bss section ({x} --> {x})", 
+        .{ &__bss_begin, &__bss_end, }
+    );
+    utils.memzero(
+        @intFromPtr(&__bss_begin),
+        @intFromPtr(&__bss_end)
+    );
+
+    uart.printLn("I'm gonna try something...", .{});
+    _ = asm volatile("svc 0x69");
+
+    //symbols.@"kernel.stack_pointer" = __kernel_stack;
+
+    while (true) {}
+}
+
+pub fn processTest() void {
 
     // Unmask interrupts
     aarch64.storeSysReg(.daif, 0);
@@ -50,9 +70,7 @@ export fn kmain() noreturn {
     }) catch unreachable;
 
     Scheduler.instance.begin() catch unreachable;
-    uart.writer.print("Scheduler initialized\n", .{}) catch unreachable;
+    uart.printLn("Scheduler initialized", .{});
 
-    uart.writer.print("Waiting to start user processes...\n", .{}) catch unreachable;
-
-    while (true) {}
+    uart.printLn("Waiting to start user processes...", .{});
 }

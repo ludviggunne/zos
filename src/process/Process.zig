@@ -59,13 +59,13 @@ pub const Context align(16) = packed struct {
     }
 
     pub fn print(self: *@This()) void {
-        @import("../peripherals/uart.zig").writer.print(
+        @import("../peripherals/uart.zig").print(
             \\
             \\ x0:  {d}  x1:  {d} x2:  {d} x3:  {d}
             \\     ...
             \\ pc: {x} sp:  {x}
             \\
             , .{ self.x0, self.x1, self.x2, self.x3, self.pc().*, self.sp, }
-        ) catch unreachable;
+        );
     }
 };

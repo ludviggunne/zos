@@ -7,7 +7,7 @@ pub export fn memzero(begin: usize, end: usize) void {
     }
 }
 
-pub fn delay(t: u64) void {
+pub fn delay(t: u64) linksection(".text.shared") void {
     var t_ = t;
     while (t_ > 0) {
         _ = asm volatile("nop");

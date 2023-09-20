@@ -48,8 +48,7 @@ pub fn schedule(self: *Self, descr: ProcDescr) !u32 {
 
     proc.context.pc().* = descr.entry;
     try self.processes.append(proc);
-    uart.writer.print("Scheduled process id={d}.\n", .{ proc.id, })
-        catch unreachable;
+    uart.printLn("Scheduled process id={d}.", .{ proc.id, });
     self.id_count += 1;
     return proc.id;
 }
@@ -57,14 +56,12 @@ pub fn schedule(self: *Self, descr: ProcDescr) !u32 {
 pub fn begin(self: *Self) !void {
 
     if (self.processes.len == 0) {
-        uart.writer.print("Begin called with no processes scheduled.\n", .{})
-            catch unreachable;
+        uart.printLn("Begin called with no processes scheduled.", .{});
         return error.NoneScheduled;
     } 
 
     const current = &self.processes.slice()[0];
-    uart.writer.print("Initializing first process id={d}.\n", .{ current.id })
-        catch unreachable;
+    uart.printLn("Initializing first process id={d}.", .{ current.id });
     timer.init(.scheduler, self.policy.interval());
     symbols.@"process.context" = &current.context;
     self.current = current;
@@ -77,14 +74,12 @@ pub fn begin(self: *Self) !void {
 pub fn invoke(self: *Self) void {
 
     if (self.current == null) { 
-        uart.writer.print(" -> Switch invoked with no running processes.\n", .{})
-            catch unreachable;
+        uart.print(" -> Switch invoked with no running processes.\n", .{});
         return;
     }
     self.policy.invoke();
     const current = self.current.?;
-    uart.writer.print(" -> Switched to process id={d}\n", .{ current.id, })
-        catch unreachable;
+    uart.print(" -> Switched to process id={d}\n", .{ current.id, });
     symbols.@"process.context" = &current.context;
     current.context.print();
     assertAlignment();
@@ -96,11 +91,11 @@ pub fn invoke(self: *Self) void {
 
 pub export fn handleSwitchException() void {
 
-    uart.writer.print("Interrupt request", .{}) catch unreachable;
+    uart.print("Interrupt request", .{});
 
     const status = timer.getStatus();
     if (status.contains(.scheduler)) {
-        uart.writer.print(" -> Scheduler invoked", .{}) catch unreachable;
+        uart.print(" -> Scheduler invoked", .{});
         instance.invoke();
         timer.reset(
             .scheduler,
@@ -108,12 +103,11 @@ pub export fn handleSwitchException() void {
         ); 
     }
 
-    uart.writer.print("\n", .{}) catch unreachable;
+    uart.printLn("", .{});
 }
 
 pub fn assertAlignment() void {
     if (!utils.isAligned(16, symbols.@"process.context")) {
-        uart.writer.print("!!! process.context is misaligned !!!\n", .{})
-            catch unreachable;
+        uart.printLn("!!! process.context is misaligned !!!", .{});
     }
 }

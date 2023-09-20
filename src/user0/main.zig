@@ -4,7 +4,7 @@ const zos = struct {
     const utils = @import("../utils.zig");
 };
 
-pub export fn user0Main() linksection(".user0.text._start") void {
+pub export fn user0Main() linksection(".text.user0._start") void {
 
     var s = asm volatile (
         \\mov   x0, sp

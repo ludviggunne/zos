@@ -5,21 +5,26 @@ const Self = @This();
 
 mem: *volatile u32,
 
-pub fn init(addr: u64) Self {
+pub fn init(addr: u64) linksection(".text.shared") Self {
     return .{
         .mem = @ptrFromInt(addr),
     };
 }
 
-pub fn write(self: Self, value: u32) void {
+pub fn write(self: Self, value: u32) linksection(".text.shared") void {
     self.mem.* = value;
 }
 
-pub fn read(self: Self) u32 {
+pub fn read(self: Self) linksection(".text.shared") u32 {
     return self.mem.*;
 }
 
-pub fn set(self: Self, offset: u5, width: u5, value: u32) void {
+pub fn set(
+    self: Self,
+    offset: u5,
+    width: u5,
+    value: u32
+) linksection(".text.shared") void {
     var mask = (@as(u32, 1) << (width)) - 1;
     mask <<= offset;
     mask = ~mask;
@@ -27,7 +32,11 @@ pub fn set(self: Self, offset: u5, width: u5, value: u32) void {
     self.mem.* |= value << offset;
 }
 
-pub fn set_enum(self: Self, offset: u5, value: anytype) void {
+pub fn set_enum(
+    self: Self,
+    offset: u5,
+    value: anytype
+) linksection(".text.shared") void {
     switch (@typeInfo(@TypeOf(value))) {
         .Enum => |Enum| {
             const TagType = Enum.tag_type;
@@ -39,7 +48,7 @@ pub fn set_enum(self: Self, offset: u5, value: anytype) void {
     }
 }
 
-pub fn get(self: Self, offset: u5, width: u5) u32 {
+pub fn get(self: Self, offset: u5, width: u5) linksection(".text.shared") u32 {
     var mask = (@as(u32, 1) << width) - 1;
     return mask & (self.mem.* >> offset);
 }

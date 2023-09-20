@@ -1,2 +1,2 @@
 // Peripherals base address
-pub const address: usize = 0xfe00_0000;
+pub const address: usize linksection(".data.shared") = 0xfe00_0000;

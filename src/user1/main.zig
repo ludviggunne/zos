@@ -4,7 +4,7 @@ const zos = struct {
     const utils = @import("../utils.zig");
 };
 
-pub export fn user1Main() linksection(".user1.text._start") void {
+pub export fn user1Main() linksection(".text.user1._start") void {
     
     while (true) {
         zos.uart.writer.print("User 1 says hi!\n", .{}) catch unreachable;
