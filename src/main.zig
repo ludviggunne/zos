@@ -43,11 +43,8 @@ export fn kmain() linksection(".text.kernel.start") noreturn {
         @intFromPtr(&__bss_end)
     );
 
-    uart.printLn("I'm gonna try something...", .{});
-    _ = asm volatile("svc 0x69");
-
-    //symbols.@"kernel.stack_pointer" = __kernel_stack;
-
+    symbols.@"kernel.stack_pointer" = &__kernel_stack;
+    
     while (true) {}
 }
 
